@@ -1,0 +1,11 @@
+{
+	"Create Zustand Store": {
+		"prefix": "zusstore",
+		"body": [
+			"import {create} from 'zustand' ",
+			"\nexport type Store = {\n\n}",
+			"\nexport const ${1:storeName}Store = create<Store>((set) => ({\n}))"
+		],
+		"description": "Creates a new Zustand store"
+	}
+}
