@@ -1,5 +1,12 @@
 local M = {}
 
+local function merge_hl(base, override)
+  local result = {}
+  if base then for k, v in pairs(base) do result[k] = v end end
+  if override then for k, v in pairs(override) do result[k] = v end end
+  return result
+end
+
 local function get_treesitter_context(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
 
@@ -79,10 +86,18 @@ function M.render(config, theme, opts)
     display = display:sub(1, max_length - 3) .. '...'
   end
 
+  local default_icon_hl = config.default_icon_hl
+  local default_border = config.default_border
+
   local component = {
     content = display,
-    hl = theme.treesitter or { fg = '#bb9af7', bg = '#1f2335' },
-    border = config.default_border,
+    icon = {
+      text = '🌳',
+    },
+    icon_hl = merge_hl(default_icon_hl, opts and opts.icon_hl),
+    hl = merge_hl(theme.treesitter or { fg = '#c0caf5', bg = '#1f2335' }, opts and opts.hl) or { fg = '#bb9af7', bg = '#1f2335' },
+    border_left = (opts and opts.border_left) or default_border,
+    border_right = (opts and opts.border_right) or default_border,
   }
 
   return component

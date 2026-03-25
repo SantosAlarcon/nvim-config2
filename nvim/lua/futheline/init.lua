@@ -46,9 +46,7 @@ local function get_components_for_section(cfg, theme, section)
     if mod then
       local rendered = mod.render(cfg, theme, comp_opts)
       if rendered then
-        if comp_opts.border then
-          rendered.border = comp_opts.border
-        end
+        rendered._index = #components + 1
         table.insert(components, rendered)
       end
     end
@@ -65,21 +63,21 @@ local function get_components(cfg, theme)
 end
 
 local function refresh()
-  if not M.config then return end
+	if not M.config then return end
 
-  state.update_all()
-  local components = get_components(M.config, M.theme)
-  renderer.setup_highlights(components, M.theme)
-  renderer.render(components, M.config)
+	state.update_all()
+	local components = get_components(M.config, M.theme)
+	renderer.setup_highlights(components, M.theme, state.state.mode)
+	renderer.render(components, M.config)
 end
 
 function M.get()
-  if not M.config then return '' end
+	if not M.config then return '' end
 
-  state.update_all()
-  local components = get_components(M.config, M.theme)
-  renderer.setup_highlights(components, M.theme)
-  return renderer.render(components, M.config)
+	state.update_all()
+	local components = get_components(M.config, M.theme)
+	renderer.setup_highlights(components, M.theme, state.state.mode)
+	return renderer.render(components, M.config)
 end
 
 function M.setup(user_config)

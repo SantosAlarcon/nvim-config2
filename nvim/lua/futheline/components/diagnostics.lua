@@ -3,7 +3,14 @@ local M = {}
 local state = require('futheline.state').state
 local icons = require('futheline.utils.icons')
 
-function M.render(config, theme)
+local function merge_hl(base, override)
+  local result = {}
+  if base then for k, v in pairs(base) do result[k] = v end end
+  if override then for k, v in pairs(override) do result[k] = v end end
+  return result
+end
+
+function M.render(config, theme, opts)
   local errors = state.diagnostics.errors
   local warnings = state.diagnostics.warnings
   local hints = state.diagnostics.hints
@@ -14,7 +21,6 @@ function M.render(config, theme)
   end
 
   local parts = {}
-  local hl = theme.diagnostic or { fg = '#f7768e', bg = '#1f2335' }
 
   if errors > 0 then
     table.insert(parts, icons.get_icon('diagnostics', 'error') .. ' ' .. errors)
@@ -30,11 +36,14 @@ function M.render(config, theme)
   end
 
   local content = table.concat(parts, ' ')
+  local default_border = config.default_border
+  local theme_hl = theme.diagnostic or { fg = '#f7768e', bg = '#1f2335' }
 
   local component = {
     content = content,
-    hl = hl,
-    border = config.default_border,
+    hl = merge_hl(theme_hl, opts and opts.hl),
+    border_left = (opts and opts.border_left) or default_border,
+    border_right = (opts and opts.border_right) or default_border,
   }
 
   return component

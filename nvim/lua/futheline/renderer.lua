@@ -2,114 +2,140 @@ local M = {}
 
 local border = require('futheline.utils.border')
 
-M.hl_counter = 1
-
-function M.create_hl(name, fg, bg)
-  vim.api.nvim_set_hl(0, 'Futheline' .. name, { fg = fg, bg = bg })
+local function resolve_color(color, theme, mode, color_type)
+	if color == 'mode' then
+		local mode_colors = theme.mode and theme.mode[mode]
+		if mode_colors then
+			return mode_colors[color_type] or '#c0caf5'
+		end
+		return '#c0caf5'
+	end
+	return color
 end
 
-function M.setup_highlights(sections, theme)
-  vim.api.nvim_set_hl(0, 'FuthelineDefault', { fg = '#c0caf5', bg = 'NONE' })
-  vim.api.nvim_set_hl(0, 'FuthelineBorderStart', { link = 'FuthelineDefault' })
-  vim.api.nvim_set_hl(0, 'FuthelineBorderEnd', { link = 'FuthelineDefault' })
-
-  M.hl_counter = 1
-  local all_comps = {}
-  vim.list_extend(all_comps, sections.left or {})
-  vim.list_extend(all_comps, sections.center or {})
-  vim.list_extend(all_comps, sections.right or {})
-
-  for _, comp in ipairs(all_comps) do
-    if comp then
-      if comp.hl then
-        local name = 'Comp' .. M.hl_counter
-        M.create_hl(name, comp.hl.fg, comp.hl.bg)
-      end
-      if comp.icon and comp.icon.hl then
-        local icon_bg_name = 'IconBg' .. M.hl_counter
-        local icon_fg_name = 'IconFg' .. M.hl_counter
-        M.create_hl(icon_bg_name, 'NONE', comp.icon.hl.bg)
-        M.create_hl(icon_fg_name, comp.icon.hl.fg, comp.icon.hl.bg)
-      end
-      M.hl_counter = M.hl_counter + 1
-    end
-  end
+function M.create_hl(name, fg, bg, bold)
+	local opts = { fg = fg, bg = bg }
+	if bold then
+		opts.bold = true
+	end
+	vim.api.nvim_set_hl(0, 'Futheline' .. name, opts)
 end
 
-function M.render_component(comp, comp_index, prev_has_border, next_has_border, default_icon_hl)
-  if not comp then return '' end
+function M.setup_highlights(sections, theme, mode)
+	vim.api.nvim_set_hl(0, 'FuthelineDefault', { fg = '#c0caf5', bg = 'NONE' })
 
-  local parts = {}
-  local hl_name = 'FuthelineDefault'
+	local all_comps = {}
+	vim.list_extend(all_comps, sections.left or {})
+	vim.list_extend(all_comps, sections.center or {})
+	vim.list_extend(all_comps, sections.right or {})
 
-  if comp.hl then
-    hl_name = string.format('FuthelineComp%d', comp_index)
-  end
+	for _, comp in ipairs(all_comps) do
+		if comp then
+			local idx = comp._index or 1
 
-  if comp.border and not prev_has_border then
-    local border_chars = border.get(comp.border)
-    table.insert(parts, '%#FuthelineBorderStart#' .. border_chars.left_start)
-  end
+			if comp.hl then
+				local fg = resolve_color(comp.hl.fg, theme, mode, 'fg')
+				local bg = resolve_color(comp.hl.bg, theme, mode, 'bg')
+				M.create_hl('Comp' .. idx, fg, bg, comp.hl.bold)
+			end
+			if comp.icon_hl then
+				local fg = resolve_color(comp.icon_hl.fg, theme, mode, 'fg')
+				local bg = resolve_color(comp.icon_hl.bg, theme, mode, 'bg')
+				M.create_hl('IconFg' .. idx, fg, bg, comp.icon_hl.bold)
+			elseif comp.icon and comp.icon.hl then
+				local fg = resolve_color(comp.icon.hl.fg, theme, mode, 'fg')
+				local bg = resolve_color(comp.icon.hl.bg, theme, mode, 'bg')
+				M.create_hl('IconFg' .. idx, fg, bg)
+			end
+			if comp.border_left and comp.border_left.hl then
+				local fg = resolve_color(comp.border_left.hl.fg, theme, mode, 'fg')
+				local bg = resolve_color(comp.border_left.hl.bg, theme, mode, 'bg')
+				M.create_hl('BorderLeft' .. idx, fg, bg, comp.border_left.hl.bold)
+			end
+			if comp.border_right and comp.border_right.hl then
+				local fg = resolve_color(comp.border_right.hl.fg, theme, mode, 'fg')
+				local bg = resolve_color(comp.border_right.hl.bg, theme, mode, 'bg')
+				M.create_hl('BorderRight' .. idx, fg, bg, comp.border_right.hl.bold)
+			end
+		end
+	end
+end
 
-  if comp.icon then
-    local icon_hl = comp.icon.hl or default_icon_hl
-    if icon_hl then
-      local icon_bg_name = 'FuthelineIconBg' .. comp_index
-      local icon_fg_name = 'FuthelineIconFg' .. comp_index
-      table.insert(parts, '%#' .. icon_bg_name .. '#' .. ' ')
-      table.insert(parts, '%#' .. icon_fg_name .. '#' .. comp.icon.text)
-      table.insert(parts, '%#FuthelineDefault# ')
-    end
-  end
+function M.render_component(comp, comp_index, default_icon_hl, default_border)
+	if not comp then return '' end
 
-  table.insert(parts, '%#' .. hl_name .. '#' .. comp.content)
+	local idx = comp._index or comp_index
+	local parts = {}
 
-  if comp.border then
-    if not next_has_border then
-      local border_chars = border.get(comp.border)
-      table.insert(parts, '%#FuthelineBorderEnd#' .. border_chars.right_end)
-    else
-      table.insert(parts, '%#FuthelineDefault#')
-    end
-  else
-    table.insert(parts, '%#FuthelineDefault#')
-  end
+	local border_left = comp.border_left or
+		(comp.border and { style = comp.border, hl = default_border and default_border.hl })
+	local border_right = comp.border_right or
+		(comp.border and { style = comp.border, hl = default_border and default_border.hl })
 
-  return table.concat(parts)
+	local border_left_style = border_left and border.get(border_left.style or 'round')
+	local border_right_style = border_right and border.get(border_right.style or 'round')
+
+	if border_left then
+		local hl_name = 'FuthelineDefault'
+		if border_left.hl then
+			hl_name = 'FuthelineBorderLeft' .. idx
+		end
+		table.insert(parts, '%#' .. hl_name .. '#' .. border_left_style.left_start)
+	end
+
+	if comp.icon then
+		local icon_hl = comp.icon_hl or default_icon_hl
+		if icon_hl then
+			local icon_fg_name = 'FuthelineIconFg' .. idx
+			table.insert(parts, '%#' .. icon_fg_name .. '#' .. comp.icon.text .. ' ')
+			table.insert(parts, '%#FuthelineDefault#')
+		end
+	end
+
+	local content_hl = comp.hl and ('FuthelineComp' .. idx) or 'FuthelineDefault'
+	table.insert(parts, '%#' .. content_hl .. '#' .. ' ' .. comp.content)
+
+	if border_right then
+		local hl_name = 'FuthelineDefault'
+		if border_right.hl then
+			hl_name = 'FuthelineBorderRight' .. idx
+		end
+		table.insert(parts, '%#' .. hl_name .. '#' .. border_right_style.right_end)
+	end
+
+	return table.concat(parts)
 end
 
 function M.render(sections, config)
-  local default_icon_hl = config.default_icon_hl
+	local default_icon_hl = config.default_icon_hl
+	local default_border = config.default_border
 
-  local function render_section(comps, global_index)
-    local parts = {}
-    for i, comp in ipairs(comps) do
-      if comp then
-        local next_comp = comps[i + 1]
-        local prev_has_border = i > 1 and comps[i - 1] and comps[i - 1].border
-        local next_has_border = next_comp and next_comp.border
-        local part = M.render_component(comp, global_index + i, prev_has_border, next_has_border, default_icon_hl)
-        if part ~= '' then
-          table.insert(parts, part)
-        end
-      end
-    end
-    return table.concat(parts, ' ')
-  end
+	local function render_section(comps, global_index)
+		local parts = {}
+		for i, comp in ipairs(comps) do
+			if comp then
+				local part = M.render_component(comp, global_index + i, default_icon_hl, default_border)
+				if part ~= '' then
+					table.insert(parts, part)
+				end
+			end
+		end
+		return table.concat(parts, ' ')
+	end
 
-  local left_str = render_section(sections.left or {}, 0)
-  local center_str = render_section(sections.center or {}, #sections.left)
-  local right_str = render_section(sections.right or {}, #sections.left + #sections.center)
+	local left_str = render_section(sections.left or {}, 0)
+	local center_str = render_section(sections.center or {}, #sections.left)
+	local right_str = render_section(sections.right or {}, #sections.left + #sections.center)
 
-  local result = left_str
-  if center_str ~= '' then
-    result = result .. '%=' .. center_str .. '%='
-  end
-  if right_str ~= '' then
-    result = result .. '%=' .. right_str
-  end
+	local result = left_str
+	if center_str ~= '' then
+		result = result .. '%=' .. center_str .. '%='
+	end
+	if right_str ~= '' then
+		result = result .. '%=' .. right_str
+	end
 
-  return result
+	return result
 end
 
 return M

@@ -8,6 +8,11 @@ M.default_config = {
 		custom_icon = '',
 		mode_style = 'icon_long',
 		colors = {},
+		labels = {
+			i = "INSERTAR",
+			r = "REEMPLAZAR",
+			c = "COMANDO"
+		}
 	},
 
 	default_icon_hl = {
@@ -15,18 +20,24 @@ M.default_config = {
 		bg = '#1a1b26',
 	},
 
-	default_border = 'round',
+	default_border = {
+		style = 'round',
+		hl = {
+			fg = '#7aa2f7',
+			bg = '#1a1b26',
+		},
+	},
 
 	components = {
 		left = {
-			{ 'mode', border = 'round' },
-			{ 'git', border = 'round' },
-			{ 'file', border = 'arrow' },
+			{ 'mode' },
+			{ 'git' },
+			{ 'file' },
 			{ 'indent' },
 		},
 		center = {},
 		right = {
-			{ 'diagnostics', border = 'slant' },
+			{ 'diagnostics' },
 			{ 'lsp' },
 			{ 'position' },
 		},

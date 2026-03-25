@@ -2,41 +2,95 @@ vim.opt.rtp:prepend(vim.fn.stdpath('config') .. '/lua')
 
 require('futheline').setup({
 	theme = 'github_dark',
-
-	mode = {
-		icon_style = 'neovim',
-		mode_style = 'icon_long',
-	},
-
-	file = {
-		empty_name = "[Sin nombre]"
-	},
-
-	default_icon_hl = {
-		fg = '#7aa2f7',
-		bg = '#1a1b26',
-	},
-
-	default_border = 'round',
-
 	components = {
 		left = {
-			{ 'mode', border = 'round' },
-			{ 'file', border = 'round' },
+			{
+				'mode',
+				icon_style = "neovim",
+				mode_style = "long",
+				hl = {
+					bg = "mode",
+					fg = "#ffffff"
+				},
+				border_right = {
+					style = "round",
+					hl = {
+						fg = "mode"
+					}
+				}
+			},
+			{
+				'file',
+				empty_name = "[Sin nombre]",
+				hl = {
+					fg = "#ffffff",
+				},
+				border_left = {
+					style = 'round',
+					hl = {
+						fg = "#aaaaff",
+					}
+				},
+				border_right = {
+					style = 'round',
+					hl = {
+						fg = "#6666ff",
+					}
+				},
+				icon_hl = {
+					fg = '#000000',
+					bg = '#aaaaff'
+				}
+			},
 		},
-
 		center = {
 			{ 'git', border = 'round' },
 		},
-
 		right = {
-			{ 'lsp',         show_server = true },
-			{ 'diagnostics', border = 'slant' },
-			{ 'position',    border = "round" },
+			{ 'diagnostics' },
+			{
+				'lsp',
+				border_left = {
+					style = "round",
+					hl = {
+						fg = "#aaaaff"
+					}
+				},
+				border_right = {
+					style = "round",
+					hl = {
+						fg = "#6666ff"
+					}
+				},
+				icon_hl = {
+					fg = '#000000',
+					bg = '#aaaaff'
+				},
+				hl = {
+					bg = "#6666ff",
+					fg = "#ffffff"
+				},
+			},
+			{
+				hl = {
+					bg = "#6666ff",
+					fg = "#ffffff"
+				},
+				'position',
+				border_left = {
+					style = "round",
+					fg = "#aaaaff"
+				},
+				border_right = {
+					style = "round",
+					fg = "#ff0000",
+					bg = "#ff000"
+				},
+				icon_hl = {
+					fg = '#000000',
+					bg = '#aaaaff'
+				}
+			},
 		}
 	},
-
-	position = {
-		mode_style = "icon"
-	}
 })

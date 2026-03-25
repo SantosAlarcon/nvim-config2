@@ -24,8 +24,8 @@ M.icons = {
 	},
 
 	lsp = {
-		attached = ' LSP ',
-		disconnected = ' LSP ',
+		attached = '  ',
+		disconnected = '  ',
 	},
 
 	file = {

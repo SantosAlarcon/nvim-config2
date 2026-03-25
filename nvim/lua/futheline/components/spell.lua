@@ -2,7 +2,14 @@ local M = {}
 
 local icons = require('futheline.utils.icons')
 
-function M.render(config, theme, _opts)
+local function merge_hl(base, override)
+  local result = {}
+  if base then for k, v in pairs(base) do result[k] = v end end
+  if override then for k, v in pairs(override) do result[k] = v end end
+  return result
+end
+
+function M.render(config, theme, opts)
   if not vim.bo.spell then
     return nil
   end
@@ -10,13 +17,22 @@ function M.render(config, theme, _opts)
   local lang = vim.bo.spelllang or 'en'
   local lang_short = lang:match('^%a+') or lang
 
-  local icon = icons.get_icon('spell', 'on') or 'spell'
-  local content = icon .. ' ' .. lang_short:upper()
+  local spell_icon = icons.get_icon('spell', 'on') or 'spell'
+  local content = lang_short:upper()
+
+  local default_icon_hl = config.default_icon_hl
+  local default_border = config.default_border
+  local theme_hl = theme.spell or { fg = '#e0af68', bg = '#1f2335' }
 
   local component = {
     content = content,
-    hl = theme.spell or { fg = '#e0af68', bg = '#1f2335' },
-    border = config.default_border,
+    icon = {
+      text = spell_icon,
+    },
+    icon_hl = merge_hl(default_icon_hl, opts and opts.icon_hl),
+    hl = merge_hl(theme_hl, opts and opts.hl),
+    border_left = (opts and opts.border_left) or default_border,
+    border_right = (opts and opts.border_right) or default_border,
   }
 
   return component
