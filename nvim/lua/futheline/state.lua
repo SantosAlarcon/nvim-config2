@@ -1,9 +1,5 @@
 local M = {}
 
-local border = require('futheline.utils.border')
-local colors = require('futheline.utils.colors')
-local icons = require('futheline.utils.icons')
-
 local state = {
 	mode = 'n',
 	git = {

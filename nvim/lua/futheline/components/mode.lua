@@ -3,145 +3,86 @@ local M = {}
 local state = require('futheline.state').state
 local icons = require('futheline.utils.icons')
 
-local mode_labels = {
-	n = 'NORMAL',
-	no = 'NORMAL',
-	nov = 'NORMAL',
-	noV = 'NORMAL',
-	['no\22'] = 'NORMAL',
-	niI = 'NORMAL',
-	niR = 'NORMAL',
-	niV = 'NORMAL',
-	v = 'VISUAL',
-	V = 'V-LINE',
-	['^V'] = 'V-BLOCK',
-	s = 'SELECT',
-	S = 'S-LINE',
-	['^S'] = 'S-BLOCK',
-	i = 'INSERT',
-	ic = 'INSERT',
-	ix = 'INSERT',
-	R = 'REPLACE',
-	Rc = 'REPLACE',
-	Rv = 'V-REPLACE',
-	Rx = 'REPLACE',
-	c = 'COMMAND',
-	cv = 'EX',
-	ce = 'EX',
-	r = 'PROMPT',
-	rm = 'MORE',
-	['r?'] = 'CONFIRM',
-	['!'] = 'SHELL',
-	t = 'TERMINAL',
-}
-
-local mode_short_labels = {
-	n = 'N',
-	no = 'N',
-	nov = 'N',
-	noV = 'N',
-	['no\22'] = 'N',
-	niI = 'N',
-	niR = 'N',
-	niV = 'N',
-	v = 'V',
-	V = 'VL',
-	['^V'] = 'VB',
-	s = 'S',
-	S = 'SL',
-	['^S'] = 'SB',
-	i = 'I',
-	ic = 'I',
-	ix = 'I',
-	R = 'R',
-	Rc = 'R',
-	Rv = 'R',
-	Rx = 'R',
-	c = 'C',
-	cv = 'EX',
-	ce = 'EX',
-	r = 'P',
-	rm = 'M',
-	['r?'] = 'C',
-	['!'] = 'T',
-	t = 'T',
+local mode_info = {
+	['n']     = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['no']    = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['nov']   = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['noV']   = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['no\22'] = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['niI']   = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['niR']   = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['niV']   = { long = 'NORMAL', short = 'N', mode = 'normal' },
+	['v']     = { long = 'VISUAL', short = 'V', mode = 'visual' },
+	['V']     = { long = 'V-LINE', short = 'VL', mode = 'visual' },
+	['^V']    = { long = 'V-BLOCK', short = 'VB', mode = 'visual' },
+	['s']     = { long = 'SELECT', short = 'S', mode = 'visual' },
+	['S']     = { long = 'S-LINE', short = 'SL', mode = 'visual' },
+	['^S']    = { long = 'S-BLOCK', short = 'SB', mode = 'visual' },
+	['i']     = { long = 'INSERT', short = 'I', mode = 'insert' },
+	['ic']    = { long = 'INSERT', short = 'I', mode = 'insert' },
+	['ix']    = { long = 'INSERT', short = 'I', mode = 'insert' },
+	['R']     = { long = 'REPLACE', short = 'R', mode = 'replace' },
+	['Rc']    = { long = 'REPLACE', short = 'R', mode = 'replace' },
+	['Rv']    = { long = 'V-REPLACE', short = 'R', mode = 'replace' },
+	['Rx']    = { long = 'REPLACE', short = 'R', mode = 'replace' },
+	['c']     = { long = 'COMMAND', short = 'C', mode = 'command' },
+	['cv']    = { long = 'EX', short = 'EX', mode = 'command' },
+	['ce']    = { long = 'EX', short = 'EX', mode = 'command' },
+	['r']     = { long = 'PROMPT', short = 'P', mode = 'prompt' },
+	['rm']    = { long = 'MORE', short = 'M', mode = 'prompt' },
+	['r?']    = { long = 'CONFIRM', short = 'C', mode = 'prompt' },
+	['!']     = { long = 'SHELL', short = 'T', mode = 'terminal' },
+	['t']     = { long = 'TERMINAL', short = 'T', mode = 'terminal' },
 }
 
 function M.render(config, theme, opts)
 	local current_mode = state.mode or 'n'
-	local mode_config = config.mode or {}
-	local mode_style = opts.mode_style or mode_config.mode_style or 'icon_long'
+	local mode_config = config.mode
+	local style = opts.mode_style or mode_config.mode_style or 'icon_long'
 	local icon_style = opts.icon_style or mode_config.icon_style or 'vim'
-	local custom_icon = mode_config.custom_icon or ''
-	local user_labels = mode_config.labels or {}
-	local user_colors = mode_config.colors or {}
+	local labels = mode_config.labels or {}
+	local colors = mode_config.colors or {}
 
-	local label
-	if user_labels[current_mode] then
-		label = user_labels[current_mode]
-	elseif mode_style == 'short' then
-		label = mode_short_labels[current_mode] or current_mode:upper()
-	elseif mode_style == 'long' then
-		label = mode_labels[current_mode] or current_mode:upper()
-	else
-		label = mode_short_labels[current_mode] or current_mode:upper()
+	local show_icon = opts.show_icon
+	if show_icon == nil then
+		show_icon = config.icons
 	end
 
-	local icon
-	if icon_style == 'vim' then
-		icon = icons.get_icon('mode', 'vim')
-	elseif icon_style == 'neovim' then
-		icon = icons.get_icon('mode', 'neovim')
-	elseif icon_style == 'custom' then
-		icon = custom_icon
-	else
-		icon = ''
+	local info = mode_info[current_mode]
+	local mode_key = labels[current_mode] and current_mode or info.mode
+	local label = labels[current_mode]
+		or (style == 'short' and info.short)
+		or info.long
+
+	local icon = ''
+	if show_icon then
+		local icon_map = {
+			vim = icons.get_icon('mode', 'vim'),
+			neovim = icons.get_icon('mode', 'neovim'),
+			custom = mode_config.custom_icon,
+		}
+		icon = icon_map[icon_style] or ''
 	end
 
-	local content
-	if mode_style == 'icon' then
-		content = ''
-	elseif mode_style == 'icon_long' then
-		content = label
-	elseif mode_style == 'icon_short' then
-		content = label
-	else
-		content = label
+	local show_label = style ~= 'icon'
+
+	local mode_colors = colors[current_mode] or theme.mode[mode_key]
+
+	local component_hl = { fg = mode_colors.fg, bg = mode_colors.bg }
+	if opts.hl then
+		if opts.hl.fg then component_hl.fg = opts.hl.fg end
+		if opts.hl.bg then component_hl.bg = opts.hl.bg end
+		if opts.hl.bold then component_hl.bold = true end
 	end
 
-	local color_key = user_colors[current_mode] and current_mode or 'normal'
-	local mode_colors = user_colors[current_mode] or theme.mode[current_mode] or theme.mode.normal
-
-	local default_icon_hl = config.default_icon_hl
-	local default_border = config.default_border
-
-	local hl_opts = opts and opts.hl
-	local component_hl = {
-		fg = mode_colors.fg,
-		bg = mode_colors.bg,
-	}
-	if hl_opts then
-		if hl_opts.fg then component_hl.fg = hl_opts.fg end
-		if hl_opts.bg then component_hl.bg = hl_opts.bg end
-		if hl_opts.bold then component_hl.bold = true end
-	end
-
-	local icon_hl_opts = opts and opts.icon_hl
-	local component_icon_hl = icon_hl_opts or default_icon_hl
-
-	local component = {
-		content = content,
-		icon = {
-			text = icon,
-			pos = 'left',
-		},
-		icon_hl = component_icon_hl,
+	return {
+		content = show_label and label or '',
+		icon = { text = icon, pos = 'left' },
+		icon_hl = opts.icon_hl or config.default_icon_hl,
 		hl = component_hl,
-		border_left = (opts and opts.border_left) or default_border,
-		border_right = (opts and opts.border_right) or default_border,
+		border_left = opts.border_left or config.default_border,
+		border_right = opts.border_right or config.default_border,
 	}
-
-	return component
 end
 
 return M

@@ -5,11 +5,11 @@ A lightweight, highly customizable Neovim statusline plugin with per-component s
 ## Features
 
 - **24 Built-in Components**: Mode, Git, File, LSP, Diagnostics, Treesitter, and more
+- **6 Visual Presets**: standard, rounded, sharp, minimal, soft, vscode
 - **Per-Component Styling**: Each component has independent icon, text, and background colors
 - **Icon Badges**: Icons render as colored badges with their own highlight groups
-- **Border Styles**: `round`, `arrow`, `slant`, `minimal`, or `none` per component
-- **Shared Borders**: Adjacent bordered components share edges for a unified look
-- **8 Preset Themes**: TokyoNight, Catppuccin, Dracula, Nord, Rose Pine, Nightfox, Gruvbox, Everblush
+- **Border Styles**: `round`, `sharp`, or `none` (controlled by preset)
+- **11 Preset Themes**: TokyoNight, Catppuccin, Dracula, Nord, Rose Pine, Nightfox, Gruvbox, Everblush, GitHub Dark/Dimmed/Light
 - **Mode Customization**: Choose icon style (Vim/Neovim/Custom), label format, and per-mode colors
 - **gitsigns.nvim Integration**: Git branch, diff stats, and blame support
 - **Full Width**: Statusline spans the entire window width
@@ -68,6 +68,9 @@ require('futheline').setup({
 
 ```lua
 require('futheline').setup({
+  -- Visual preset: 'standard', 'rounded', 'sharp', 'minimal', 'soft', 'vscode'
+  preset = 'standard',
+
   -- Theme: 'tokyonight', 'catppuccin', 'dracula', 'nord',
   --        'rose_pine', 'nightfox', 'gruvbox', 'everblush',
   --        'github_dark', 'github_dimmed', 'github_light',
@@ -83,36 +86,59 @@ require('futheline').setup({
     labels = {},              -- Per-mode label overrides
   },
 
-  -- Default icon badge highlight
-  default_icon_hl = {
-    fg = '#7aa2f7',
-    bg = '#1a1b26',
-  },
-
-  -- Default border for components without explicit border
-  default_border = 'round',
-
   -- Git component settings
   git = {
-    show_diff = false,  -- Show added/removed/changed counts
+    show_diff = true,  -- Show added/removed/changed counts
   },
 
   -- Component order and per-component options
   components = {
-    { 'mode', border = 'round' },
-    { 'git', show_diff = true, border = 'round' },
-    { 'file', border = 'arrow' },
-    { 'filetype' },
+    { 'mode' },
+    { 'git' },
+    { 'file' },
     { 'indent' },
-    { 'lsp', show_server = true },
-    { 'diagnostics', border = 'slant' },
+    { 'diagnostics' },
+    { 'lsp' },
     { 'position' },
   },
+})
+```
 
-  -- Separators between components
-  separators = {
-    left = ' ',
-    right = ' ',
+### Presets
+
+Presets define the visual style of the statusline. Choose a preset that matches your aesthetic:
+
+```lua
+require('futheline').setup({
+  preset = 'rounded',  -- Try: 'standard', 'rounded', 'sharp', 'minimal', 'soft', 'vscode'
+  theme = 'github_dark',
+})
+```
+
+#### Available Presets
+
+| Preset | Border | Icons | Padding | Description |
+|--------|--------|-------|---------|-------------|
+| `standard` | none | no | compact | Minimal, clean look |
+| `rounded` | round | yes | medium | Rounded corners with icons |
+| `sharp` | sharp | no | compact | Angular borders, no icons |
+| `minimal` | none | no | tight | Ultra-compact, dot separators |
+| `soft` | round | yes | spacious | Wide spacing, vertical separators |
+| `vscode` | none | no | compact | VSCode-inspired style |
+
+#### Preset Components
+
+Each preset includes a default component layout, but you can add or override components:
+
+```lua
+require('futheline').setup({
+  preset = 'rounded',
+  components = {
+    { 'mode' },      -- From preset
+    { 'git' },       -- From preset
+    { 'file' },      -- From preset
+    { 'indent' },    -- From preset
+    { 'lsp' },       -- Adding custom component
   },
 })
 ```

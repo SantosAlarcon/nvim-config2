@@ -2,17 +2,15 @@ local M = {}
 
 local icons = require('futheline.utils.icons')
 
-local function merge_hl(base, override)
-  local result = {}
-  if base then for k, v in pairs(base) do result[k] = v end end
-  if override then for k, v in pairs(override) do result[k] = v end end
-  return result
-end
-
 function M.render(config, theme, opts)
   local bufname = vim.api.nvim_buf_get_name(0)
   if bufname == '' then
     return nil
+  end
+
+  local show_icon = opts.show_icon
+  if show_icon == nil then
+    show_icon = config.icons
   end
 
   local max_length = (opts and opts.max_length) or 40
@@ -36,22 +34,18 @@ function M.render(config, theme, opts)
     display_name = '...' .. display_name:sub(-max_length + 3)
   end
 
-  local default_icon_hl = config.default_icon_hl
-  local default_border = config.default_border
+  local bufname_icon = show_icon and icons.get_icon('file', 'default') or ''
+
   local theme_hl = theme.bufname or { fg = '#c0caf5', bg = '#1f2335' }
 
-  local component = {
+  return {
     content = display_name,
-    icon = {
-      text = icons.get_icon('file', 'default'),
-    },
-    icon_hl = merge_hl(default_icon_hl, opts and opts.icon_hl),
-    hl = merge_hl(theme_hl, opts and opts.hl),
-    border_left = (opts and opts.border_left) or default_border,
-    border_right = (opts and opts.border_right) or default_border,
+    icon = { text = bufname_icon },
+    icon_hl = opts and opts.icon_hl or config.default_icon_hl,
+    hl = theme_hl,
+    border_left = opts and opts.border_left or config.default_border,
+    border_right = opts and opts.border_right or config.default_border,
   }
-
-  return component
 end
 
 return M

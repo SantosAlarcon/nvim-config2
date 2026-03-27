@@ -2,16 +2,12 @@ local M = {}
 
 local icons = require('futheline.utils.icons')
 
-local function merge_hl(base, override)
-  local result = {}
-  if base then for k, v in pairs(base) do result[k] = v end end
-  if override then for k, v in pairs(override) do result[k] = v end end
-  return result
-end
-
 function M.render(config, theme, opts)
-  local default_icon_hl = config.default_icon_hl
-  local default_border = config.default_border
+  local show_icon = opts.show_icon
+  if show_icon == nil then
+    show_icon = config.icons
+  end
+
   local theme_hl = theme.lspprogress or { fg = '#7aa2f7', bg = '#1f2335' }
 
   local progress = vim.lsp.status
@@ -22,18 +18,16 @@ function M.render(config, theme, opts)
       return nil
     end
 
-    local component = {
-      content = status_result,
-      icon = {
-        text = icons.get_icon('lsp', 'attached'),
-      },
-      icon_hl = merge_hl(default_icon_hl, opts and opts.icon_hl),
-      hl = merge_hl(theme_hl, opts and opts.hl),
-      border_left = (opts and opts.border_left) or default_border,
-      border_right = (opts and opts.border_right) or default_border,
-    }
+    local lsp_icon = show_icon and icons.get_icon('lsp', 'attached') or ''
 
-    return component
+    return {
+      content = status_result,
+      icon = { text = lsp_icon },
+      icon_hl = opts and opts.icon_hl or config.default_icon_hl,
+      hl = theme_hl,
+      border_left = opts and opts.border_left or config.default_border,
+      border_right = opts and opts.border_right or config.default_border,
+    }
   end
 
   local clients = vim.lsp.get_clients({ bufnr = 0 })
@@ -63,18 +57,16 @@ function M.render(config, theme, opts)
     content = content:sub(1, max_length - 3) .. '...'
   end
 
-  local component = {
-    content = content,
-    icon = {
-      text = icons.get_icon('lsp', 'attached'),
-    },
-    icon_hl = merge_hl(default_icon_hl, opts and opts.icon_hl),
-    hl = merge_hl(theme_hl, opts and opts.hl),
-    border_left = (opts and opts.border_left) or default_border,
-    border_right = (opts and opts.border_right) or default_border,
-  }
+  local lsp_icon = show_icon and icons.get_icon('lsp', 'attached') or ''
 
-  return component
+  return {
+    content = content,
+    icon = { text = lsp_icon },
+    icon_hl = opts and opts.icon_hl or config.default_icon_hl,
+    hl = theme_hl,
+    border_left = opts and opts.border_left or config.default_border,
+    border_right = opts and opts.border_right or config.default_border,
+  }
 end
 
 return M

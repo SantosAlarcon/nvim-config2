@@ -18,10 +18,11 @@ end
 
 function M.lighten(hex, amount)
   local rgb = M.hex_to_rgb(hex)
+  local clamp = function(v) return math.max(0, math.min(255, v)) end
   return string.format('#%02x%02x%02x',
-    math.min(255, rgb[1] + amount),
-    math.min(255, rgb[2] + amount),
-    math.min(255, rgb[3] + amount)
+    clamp(rgb[1] + amount),
+    clamp(rgb[2] + amount),
+    clamp(rgb[3] + amount)
   )
 end
 
@@ -46,6 +47,27 @@ function M.is_bright(hex)
   local rgb = M.hex_to_rgb(hex)
   local brightness = (rgb[1] * 299 + rgb[2] * 587 + rgb[3] * 114) / 1000
   return brightness > 128
+end
+
+function M.shade(hex, percent)
+  percent = percent or 0
+  return M.lighten(hex, math.floor(255 * percent / 100))
+end
+
+function M.generate_shades(base, count)
+  count = count or 10
+  local shades = {}
+  local range = 30
+  local step = (range * 2) / (count - 1)
+  for i = 1, count do
+    local offset = (i - 1) * step - range
+    if offset <= 0 then
+      shades[i] = M.darken(base, math.abs(offset))
+    else
+      shades[i] = M.lighten(base, offset)
+    end
+  end
+  return shades
 end
 
 return M

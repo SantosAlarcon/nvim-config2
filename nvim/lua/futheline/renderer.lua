@@ -2,6 +2,13 @@ local M = {}
 
 local border = require('futheline.utils.border')
 
+local padding_values = {
+	tight = 0,
+	compact = 1,
+	medium = 1,
+	spacious = 2,
+}
+
 local function resolve_color(color, theme, mode, color_type)
 	if color == 'mode' then
 		local mode_colors = theme.mode and theme.mode[mode]
@@ -19,6 +26,13 @@ function M.create_hl(name, fg, bg, bold)
 		opts.bold = true
 	end
 	vim.api.nvim_set_hl(0, 'Futheline' .. name, opts)
+end
+
+function M.setup_statusline_hl(theme)
+	local bg = theme.bg and (theme.bg.dark3 or theme.bg.main) or '#1f2335'
+	local fg = theme.fg or '#c0caf5'
+	vim.api.nvim_set_hl(0, 'StatusLine', { fg = fg, bg = bg })
+	vim.api.nvim_set_hl(0, 'StatusLineNC', { fg = '#565f89', bg = bg })
 end
 
 function M.setup_highlights(sections, theme, mode)
@@ -57,23 +71,46 @@ function M.setup_highlights(sections, theme, mode)
 				local bg = resolve_color(comp.border_right.hl.bg, theme, mode, 'bg')
 				M.create_hl('BorderRight' .. idx, fg, bg, comp.border_right.hl.bold)
 			end
+
+			if comp.parts then
+				for pi, part in ipairs(comp.parts) do
+					if part.hl then
+						local fg = resolve_color(part.hl.fg, theme, mode, 'fg')
+						local bg = resolve_color(part.hl.bg or theme.bg.main, theme, mode, 'bg')
+						M.create_hl('Part' .. idx .. '_' .. pi, fg, bg, part.hl.bold)
+					end
+				end
+			end
 		end
 	end
 end
 
-function M.render_component(comp, comp_index, default_icon_hl, default_border)
+function M.render_component(comp, comp_index, cfg)
 	if not comp then return '' end
 
 	local idx = comp._index or comp_index
 	local parts = {}
 
-	local border_left = comp.border_left or
-		(comp.border and { style = comp.border, hl = default_border and default_border.hl })
-	local border_right = comp.border_right or
-		(comp.border and { style = comp.border, hl = default_border and default_border.hl })
+	local show_icons = cfg.icons ~= false
+	local preset_border = cfg.border
+
+	local border_left = comp.border_left
+	local border_right = comp.border_right
+
+	if not border_left and preset_border and preset_border ~= 'none' then
+		border_left = { style = preset_border }
+	end
+	if not border_right and preset_border and preset_border ~= 'none' then
+		border_right = { style = preset_border }
+	end
 
 	local border_left_style = border_left and border.get(border_left.style or 'round')
 	local border_right_style = border_right and border.get(border_right.style or 'round')
+
+	local pad = padding_values[cfg.padding] or 1
+	local pad_str = (' '):rep(pad)
+	local pad_half = (' '):rep(math.max(0, pad - 1))
+	if pad_half == '' then pad_half = ' ' end
 
 	if border_left then
 		local hl_name = 'FuthelineDefault'
@@ -83,17 +120,28 @@ function M.render_component(comp, comp_index, default_icon_hl, default_border)
 		table.insert(parts, '%#' .. hl_name .. '#' .. border_left_style.left_start)
 	end
 
-	if comp.icon then
-		local icon_hl = comp.icon_hl or default_icon_hl
+	if comp.icon and comp.icon.text and comp.icon.text ~= '' and show_icons then
+		local icon_fg_name = 'FuthelineIconFg' .. idx
+		local icon_hl = comp.icon_hl
 		if icon_hl then
-			local icon_fg_name = 'FuthelineIconFg' .. idx
-			table.insert(parts, '%#' .. icon_fg_name .. '#' .. comp.icon.text .. ' ')
-			table.insert(parts, '%#FuthelineDefault#')
+			table.insert(parts, '%#' .. icon_fg_name .. '#')
 		end
+		table.insert(parts, comp.icon.text .. ' ')
+		table.insert(parts, '%#FuthelineDefault#')
 	end
 
-	local content_hl = comp.hl and ('FuthelineComp' .. idx) or 'FuthelineDefault'
-	table.insert(parts, '%#' .. content_hl .. '#' .. ' ' .. comp.content)
+	if comp.parts then
+		for pi, part in ipairs(comp.parts) do
+			local hl_name = 'FuthelinePart' .. idx .. '_' .. pi
+			local part_pad = pad > 0 and pad_str or ''
+			table.insert(parts, '%#' .. hl_name .. '#' .. part_pad .. part.text .. part_pad)
+		end
+		table.insert(parts, '%#FuthelineDefault#')
+	else
+		local content_hl = comp.hl and ('FuthelineComp' .. idx) or 'FuthelineDefault'
+		local content_pad = pad > 0 and pad_str or ''
+		table.insert(parts, '%#' .. content_hl .. '#' .. content_pad .. comp.content .. content_pad)
+	end
 
 	if border_right then
 		local hl_name = 'FuthelineDefault'
@@ -107,20 +155,17 @@ function M.render_component(comp, comp_index, default_icon_hl, default_border)
 end
 
 function M.render(sections, config)
-	local default_icon_hl = config.default_icon_hl
-	local default_border = config.default_border
-
 	local function render_section(comps, global_index)
 		local parts = {}
 		for i, comp in ipairs(comps) do
 			if comp then
-				local part = M.render_component(comp, global_index + i, default_icon_hl, default_border)
+				local part = M.render_component(comp, global_index + i, config)
 				if part ~= '' then
 					table.insert(parts, part)
 				end
 			end
 		end
-		return table.concat(parts, ' ')
+		return table.concat(parts, config.separators.left)
 	end
 
 	local left_str = render_section(sections.left or {}, 0)

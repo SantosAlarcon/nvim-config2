@@ -4,6 +4,7 @@ Complete documentation for all 24 built-in components.
 
 ## Table of Contents
 
+- [Presets](#presets)
 - [File Components](#file-components)
 - [Git Components](#git-components)
 - [LSP Components](#lsp-components)
@@ -12,6 +13,92 @@ Complete documentation for all 24 built-in components.
 - [All Component Options](#all-component-options)
 
 ---
+
+## Presets
+
+Presets define the visual style of the statusline. Each preset includes:
+- Border style
+- Whether icons are shown
+- Padding spacing
+- Default component layout
+
+```lua
+require('futheline').setup({
+  preset = 'rounded',
+  theme = 'github_dark',
+})
+```
+
+### Available Presets
+
+| Preset | Border | Icons | Padding | Separator | Default Components |
+|--------|--------|-------|--------|----------|-------------------|
+| `standard` | none | no | compact | space | mode, file, diagnostics, lsp, position |
+| `rounded` | round | yes | medium | space | mode, git, file, indent, diagnostics, lsp, position |
+| `sharp` | sharp | no | compact | none | mode, file, diagnostics, lsp, position |
+| `minimal` | none | no | tight | dot | mode, position |
+| `soft` | round | yes | spacious | vertical | mode, git, file, indent, diagnostics, lsp, position |
+| `vscode` | none | no | compact | none | mode, git, file, indent, diagnostics, lsp, position, selection |
+
+### Preset Details
+
+#### `standard`
+Minimal, clean look without borders or icons. Perfect for a distraction-free experience.
+```
+[N] [init.lua] [2 errors] [LSP] [Ln 42 Col 8]
+```
+
+#### `rounded`
+Rounded corners with icons. Balanced between visual appeal and information density.
+```
+╭ N ╮ [init.lua] [2 errors] [LSP] [Ln 42]
+```
+
+#### `sharp`
+Angular borders without icons. Clean, technical aesthetic.
+```
+[N] [init.lua] [2 errors] [LSP] [Ln 42]
+```
+
+#### `minimal`
+Ultra-compact with dot separators. Maximum information in minimal space.
+```
+[N]·[init.lua]·[position]
+```
+
+#### `soft`
+Wide spacing with vertical separators. Elegant and spacious.
+```
+│ N │ [init.lua] │ [2 errors] │ [Ln 42] │
+```
+
+#### `vscode`
+VSCode-inspired style. No borders, no icons, maximum information density.
+```
+[N] [main] [init.lua] [2 errors] [LSP] [Ln 42, Col 8] [5L 12C]
+```
+
+### Customizing Presets
+
+Add or override components while keeping the preset's visual style:
+
+```lua
+require('futheline').setup({
+  preset = 'rounded',
+  components = {
+    { 'mode' },      -- From preset
+    { 'git' },       -- From preset
+    { 'file' },      -- From preset
+    { 'indent' },    -- From preset
+    { 'lsp' },       -- Adding custom component
+    { 'position' },  -- From preset
+  },
+})
+```
+
+---
+
+## File Components
 
 ## File Components
 

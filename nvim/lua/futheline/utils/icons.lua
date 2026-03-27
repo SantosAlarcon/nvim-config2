@@ -5,6 +5,7 @@ M.icons = {
 		vim = '',
 		neovim = '',
 		custom = '',
+		none = ''
 	},
 
 	git = {
@@ -66,11 +67,6 @@ M.icons = {
 		php = '󰌟',
 		ruby = '󰴭',
 		r = '󰟔',
-		lua = '󰢱',
-	},
-
-	encoding = {
-		utf8 = 'UTF-8',
 	},
 
 	format = {
